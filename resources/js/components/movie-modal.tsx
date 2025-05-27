@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { type Movie } from '@/types';
-import { X, Play, Plus, ThumbsUp, Volume2, VolumeX } from 'lucide-react';
+import { X, Play, Plus, Volume2, VolumeX, Check, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { getMovieUrl, getImageUrl } from '@/lib/utils';
+import { router } from '@inertiajs/react';
 
 interface MovieModalProps {
     movie: Movie | null;
@@ -15,6 +16,10 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
     const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
     const [trailerKey, setTrailerKey] = useState<string | null>(null);
     const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
+    const [isInList, setIsInList] = useState(false);
+    const [isAddingToList, setIsAddingToList] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [isLiking, setIsLiking] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
     const fetchTrailer = async (movieId: number) => {
@@ -41,6 +46,84 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
         }
     };
 
+    const checkIfInList = async (movieId: number) => {
+        try {
+            const response = await fetch(`/my-list/check/${movieId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const data = await response.json();
+            setIsInList(data.in_list);
+        } catch (error) {
+            console.error('Failed to check if movie is in list:', error);
+        }
+    };
+
+    const handleAddToList = async () => {
+        if (!movie) return;
+        
+        setIsAddingToList(true);
+        try {
+            const response = await fetch('/my-list', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({
+                    movie_id: movie.id,
+                    movie_title: movie.title || movie.name,
+                    movie_poster_path: movie.poster_path,
+                    movie_backdrop_path: movie.backdrop_path,
+                    movie_overview: movie.overview,
+                    movie_release_date: movie.release_date || movie.first_air_date,
+                    media_type: movie.media_type || 'movie',
+                }),
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                setIsInList(true);
+            } else {
+                console.error('Failed to add to list:', data.message);
+            }
+        } catch (error) {
+            console.error('Failed to add to list:', error);
+        } finally {
+            setIsAddingToList(false);
+        }
+    };
+
+    const handleRemoveFromList = async () => {
+        if (!movie) return;
+        
+        setIsAddingToList(true);
+        try {
+            const response = await fetch(`/my-list/${movie.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                setIsInList(false);
+            } else {
+                console.error('Failed to remove from list:', data.message);
+            }
+        } catch (error) {
+            console.error('Failed to remove from list:', error);
+        } finally {
+            setIsAddingToList(false);
+        }
+    };
+
     const handlePlayTrailer = () => {
         if (movie) {
             if (movie.trailer) {
@@ -56,6 +139,92 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
         setIsPlayingTrailer(false);
         setTrailerKey(null);
     };
+
+    const checkIfLiked = async (movieId: number) => {
+        try {
+            const response = await fetch(`/movie-likes/check/${movieId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const data = await response.json();
+            setIsLiked(data.is_liked);
+        } catch (error) {
+            console.error('Failed to check if movie is liked:', error);
+        }
+    };
+
+    const handleLikeMovie = async () => {
+        if (!movie) return;
+        
+        setIsLiking(true);
+        try {
+            const response = await fetch('/movie-likes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({
+                    movie_id: movie.id,
+                    movie_title: movie.title || movie.name,
+                    movie_poster_path: movie.poster_path,
+                    movie_backdrop_path: movie.backdrop_path,
+                    movie_overview: movie.overview,
+                    movie_release_date: movie.release_date || movie.first_air_date,
+                    media_type: movie.media_type || 'movie',
+                }),
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                setIsLiked(true);
+            } else {
+                console.error('Failed to like movie:', data.message);
+            }
+        } catch (error) {
+            console.error('Failed to like movie:', error);
+        } finally {
+            setIsLiking(false);
+        }
+    };
+
+    const handleUnlikeMovie = async () => {
+        if (!movie) return;
+        
+        setIsLiking(true);
+        try {
+            const response = await fetch(`/movie-likes/${movie.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                setIsLiked(false);
+            } else {
+                console.error('Failed to unlike movie:', data.message);
+            }
+        } catch (error) {
+            console.error('Failed to unlike movie:', error);
+        } finally {
+            setIsLiking(false);
+        }
+    };
+
+    // Check if movie is in list when modal opens
+    useEffect(() => {
+        if (isOpen && movie) {
+            checkIfInList(movie.id);
+            checkIfLiked(movie.id);
+        }
+    }, [isOpen, movie]);
 
     // Update YouTube iframe when mute state changes
     useEffect(() => {
@@ -166,12 +335,42 @@ export function MovieModal({ movie, isOpen, onClose }: MovieModalProps) {
                                 </button>
                             )}
                             
-                            <button className="bg-zinc-700 hover:bg-zinc-600 text-white p-3 rounded-full transition-colors">
-                                <Plus className="w-5 h-5" />
+                            <button 
+                                onClick={isInList ? handleRemoveFromList : handleAddToList}
+                                disabled={isAddingToList}
+                                className={`p-3 rounded-full transition-colors disabled:opacity-50 ${
+                                    isInList 
+                                        ? 'bg-white text-black hover:bg-gray-200' 
+                                        : 'bg-zinc-700 hover:bg-zinc-600 text-white'
+                                }`}
+                                title={isInList ? 'Remove from My List' : 'Add to My List'}
+                            >
+                                {isAddingToList ? (
+                                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                ) : isInList ? (
+                                    <Check className="w-5 h-5" />
+                                ) : (
+                                    <Plus className="w-5 h-5" />
+                                )}
                             </button>
                             
-                            <button className="bg-zinc-700 hover:bg-zinc-600 text-white p-3 rounded-full transition-colors">
-                                <ThumbsUp className="w-5 h-5" />
+                            <button 
+                                onClick={isLiked ? handleUnlikeMovie : handleLikeMovie}
+                                disabled={isLiking}
+                                className={`p-3 rounded-full transition-colors disabled:opacity-50 ${
+                                    isLiked 
+                                        ? 'bg-red-600 hover:bg-red-700 text-white' 
+                                        : 'bg-zinc-700 hover:bg-zinc-600 text-white'
+                                }`}
+                                title={isLiked ? 'Unlike this movie' : 'Like this movie'}
+                            >
+                                {isLiking ? (
+                                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                ) : isLiked ? (
+                                    <Heart className="w-5 h-5 fill-current" />
+                                ) : (
+                                    <Heart className="w-5 h-5" />
+                                )}
                             </button>
                             
                             <button 

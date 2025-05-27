@@ -2,11 +2,10 @@ import { useState } from "react";
 import { type Movie} from "@/types";
 import { Link } from "@inertiajs/react";
 import { Play, Info, X } from "lucide-react";
-import { API_KEY } from "@/stores/movie-store";
+import { API_BASE, API_KEY } from "@/lib/utils";
 import { getImageUrl } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export const SMALL_IMG_BASE_URL = "https://image.tmdb.org/t/p/w500";
-export const ORIGINAL_IMG_BASE_URL = "https://image.tmdb.org/t/p/original";
 
 interface AppHeroProps {
     movie: Movie;
@@ -23,7 +22,7 @@ export function AppHero({ movie, onMoreInfoClick }: AppHeroProps) {
         setIsLoadingTrailer(true);
         try {
             const response = await fetch(
-                `https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${API_KEY}`
+                `${API_BASE}/movie/${movieId}/videos?api_key=${API_KEY}`
             );
             const data = await response.json();
             
@@ -72,19 +71,26 @@ export function AppHero({ movie, onMoreInfoClick }: AppHeroProps) {
                         allowFullScreen
                     />
                 ) : (
-                    <img
-                        src={getImageUrl(movie?.backdrop_path, 'original')}
-                        alt={movie?.title || movie?.name || "Hero image"}
-                        className="absolute top-0 left-0 w-full h-full object-cover"
-                        onLoad={() => {
-                            setImgLoading(false);
-                        }}
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/assets/netflix-logo.png';
-                            setImgLoading(false);
-                        }}
-                    />
+                    <>
+                        {imgLoading && (
+                            <Skeleton className="absolute top-0 left-0 w-full h-full bg-gray-800" />
+                        )}
+                        <img
+                            src={getImageUrl(movie?.backdrop_path, 'original')}
+                            alt={movie?.title || movie?.name || "Hero image"}
+                            className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-300 ${
+                                imgLoading ? 'opacity-0' : 'opacity-100'
+                            }`}
+                            onLoad={() => {
+                                setImgLoading(false);
+                            }}
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/assets/netflix-logo.png';
+                                setImgLoading(false);
+                            }}
+                        />
+                    </>
                 )}
 
                 <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center px-8 md:px-16 lg:px-32">

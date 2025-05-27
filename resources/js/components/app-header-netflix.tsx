@@ -6,11 +6,15 @@ import { LogOut, Search, Menu } from 'lucide-react';
 const mainNavItems: NavItem[] = [
     {
         title: 'Movies',
-        href: '/browse',
+        href: '/browse?filter=movies',
     },
     {
         title: 'TV Shows',
-        href: '/browse',
+        href: '/browse?filter=tv',
+    },
+    {
+        title: 'My List',
+        href: '/my-list',
     }
 ];
 
@@ -63,12 +67,13 @@ export function AppHeaderNetflix({ breadcrumbs = [] }: AppHeaderProps) {
                     {/* mobile navbar items */}
                 {isMobileMenuOpen && (
                     <div className='w-full sm:hidden mt-4 z-50 bg-black border rounded border-gray-800'>
-                        <Link href={"/browse"} className='block hover:underline p-2 text-white' onClick={toggleMobileMenu}>
-                            Movies
-                        </Link>
-                        <Link href={"/browse"} className="block hover:underline p-2 text-white" onClick={toggleMobileMenu}>
-                            Tv Shows
-                        </Link>
+
+                        {mainNavItems.map((item, index) => (
+                                <Link key={index} href={item.href} className='block hover:underline p-2 text-white'>
+                                    {item.title}
+                                </Link>
+                        ))}
+                        
                         <Link href={"/search"} className="block hover:underline p-2 text-white" onClick={toggleMobileMenu}>
                             Search
                         </Link>
