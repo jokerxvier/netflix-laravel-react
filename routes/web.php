@@ -7,16 +7,16 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserMovieListController;
 use App\Http\Controllers\UserMovieLikeController;
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+// Route::get('/', function () {
+//     return Inertia::render('welcome');
+// })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    Route::get('browse', [MovieController::class, 'index'])->name('browse');
+    Route::get('/', [MovieController::class, 'index'])->name('browse');
     Route::get('search', [SearchController::class, 'index'])->name('search');
     
     // My List page

@@ -6,11 +6,11 @@ import { LogOut, Search, Menu } from 'lucide-react';
 const mainNavItems: NavItem[] = [
     {
         title: 'Movies',
-        href: '/browse?filter=movies',
+        href: '/?filter=movies',
     },
     {
         title: 'TV Shows',
-        href: '/browse?filter=tv',
+        href: '/?filter=tv',
     },
     {
         title: 'My List',

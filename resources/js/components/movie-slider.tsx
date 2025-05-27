@@ -48,6 +48,10 @@ export function MovieSlider({ category, movies, onMovieClick }: MovieSliderProps
 	const [showArrows, setShowArrows] = useState(false);
 	const sliderRef = useRef<HTMLDivElement | null>(null);
 	const formattedCategoryName  = category.replaceAll("_", " ")[0].toUpperCase() + category.replaceAll("_", " ").slice(1);
+	
+	// Touch/swipe handling
+	const [touchStart, setTouchStart] = useState<number | null>(null);
+	const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
 	const scrollLeft = () => {
 		if (sliderRef.current) {
@@ -57,6 +61,32 @@ export function MovieSlider({ category, movies, onMovieClick }: MovieSliderProps
 	
 	const scrollRight = () => {
 		sliderRef.current?.scrollBy({ left: sliderRef.current.offsetWidth, behavior: "smooth" });
+	};
+
+	// Minimum swipe distance (in px)
+	const minSwipeDistance = 50;
+
+	const onTouchStart = (e: React.TouchEvent) => {
+		setTouchEnd(null); // Reset touchEnd
+		setTouchStart(e.targetTouches[0].clientX);
+	};
+
+	const onTouchMove = (e: React.TouchEvent) => {
+		setTouchEnd(e.targetTouches[0].clientX);
+	};
+
+	const onTouchEnd = () => {
+		if (!touchStart || !touchEnd) return;
+		
+		const distance = touchStart - touchEnd;
+		const isLeftSwipe = distance > minSwipeDistance;
+		const isRightSwipe = distance < -minSwipeDistance;
+
+		if (isLeftSwipe) {
+			scrollRight();
+		} else if (isRightSwipe) {
+			scrollLeft();
+		}
 	};
 
 	return (
@@ -69,7 +99,13 @@ export function MovieSlider({ category, movies, onMovieClick }: MovieSliderProps
 				{formattedCategoryName} 
 			</h2>
 
-			<div className="flex space-x-4 overflow-x-hidden scrollbar-hide" ref={sliderRef}>
+			<div 
+				className="flex space-x-4 overflow-x-hidden scrollbar-hide" 
+				ref={sliderRef}
+				onTouchStart={onTouchStart}
+				onTouchMove={onTouchMove}
+				onTouchEnd={onTouchEnd}
+			>
 				{movies.map((item) => (
 					<MovieCard 
 						key={item.id}
