@@ -40,10 +40,6 @@ A modern Netflix clone built with Laravel and React. This project combines the p
 ### Movie Detail Page
 ![Movie Detail](screenshots/movie-detail.png)
 
-### Browse Page
-![Browse Page](screenshots/browse.png)
-
-
 ### Search Page
 ![Search Page](screenshots/search.png)
 
