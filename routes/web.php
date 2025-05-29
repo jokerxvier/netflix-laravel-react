@@ -16,7 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    Route::get('/', [MovieController::class, 'index'])->name('browse');
+    Route::get('/', [MovieController::class, 'index'])->name('home');
     Route::get('search', [SearchController::class, 'index'])->name('search');
     
     // My List page
